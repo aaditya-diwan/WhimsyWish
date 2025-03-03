@@ -13,7 +13,7 @@ import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
-import java.security.Key;
+import javax.crypto.SecretKey;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
 @Component
 public class JwtTokenProvider {
 
-    private final Key key;
+    private final SecretKey key;
     private final long tokenValidityInMilliseconds;
     private final long refreshTokenValidityInMilliseconds;
 
@@ -31,37 +31,51 @@ public class JwtTokenProvider {
             @Value("${application.security.jwt.secret-key}") String secretKey,
             @Value("${application.security.jwt.expiration}") long tokenValidityInMilliseconds,
             @Value("${application.security.jwt.refresh-token.expiration}") long refreshTokenValidityInMilliseconds) {
-        this.key = Keys.hmacShaKeyFor(Decoders.BASE64.decode(secretKey));
+
+        byte[] keyBytes = Decoders.BASE64.decode(secretKey);
+
+        // Check if the key is long enough for HS512
+        if (keyBytes.length < 64) { // 512 bits = 64 bytes
+            log.warn("The provided secret key is too short for HS512 (only {} bits). Generating a secure key instead.", keyBytes.length * 8);
+            this.key = Jwts.SIG.HS512.key().build();
+        } else {
+            this.key = Keys.hmacShaKeyFor(keyBytes);
+        }
+
         this.tokenValidityInMilliseconds = tokenValidityInMilliseconds;
         this.refreshTokenValidityInMilliseconds = refreshTokenValidityInMilliseconds;
+
+        log.info("JWT token provider initialized with a {} bit key", this.key.getEncoded().length * 8);
     }
+
+    // Rest of the methods remain the same...
 
     public String createToken(Authentication authentication) {
         String authorities = authentication.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
                 .collect(Collectors.joining(","));
 
-        long now = (new Date()).getTime();
+        long now = System.currentTimeMillis();
         Date validity = new Date(now + this.tokenValidityInMilliseconds);
 
         return Jwts.builder()
-                .setSubject(authentication.getName())
+                .subject(authentication.getName())
                 .claim("auth", authorities)
-                .signWith(key, SignatureAlgorithm.HS512)
-                .setExpiration(validity)
-                .setIssuedAt(new Date(now))
+                .signWith(key)
+                .expiration(validity)
+                .issuedAt(new Date(now))
                 .compact();
     }
 
     public String createRefreshToken(Authentication authentication) {
-        long now = (new Date()).getTime();
+        long now = System.currentTimeMillis();
         Date validity = new Date(now + this.refreshTokenValidityInMilliseconds);
 
         return Jwts.builder()
-                .setSubject(authentication.getName())
-                .signWith(key, SignatureAlgorithm.HS512)
-                .setExpiration(validity)
-                .setIssuedAt(new Date(now))
+                .subject(authentication.getName())
+                .signWith(key)
+                .expiration(validity)
+                .issuedAt(new Date(now))
                 .compact();
     }
 
@@ -80,7 +94,10 @@ public class JwtTokenProvider {
 
     public boolean validateToken(String token) {
         try {
-            Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
+            Jwts.parser()
+                    .verifyWith(key)
+                    .build()
+                    .parseSignedClaims(token);
             return true;
         } catch (JwtException | IllegalArgumentException e) {
             log.error("Invalid JWT token: {}", e.getMessage());
@@ -93,11 +110,10 @@ public class JwtTokenProvider {
     }
 
     private Claims extractAllClaims(String token) {
-        return Jwts
-                .parserBuilder()
-                .setSigningKey(key)
+        return Jwts.parser()
+                .verifyWith(key)
                 .build()
-                .parseClaimsJws(token)
-                .getBody();
+                .parseSignedClaims(token)
+                .getPayload();
     }
-} 
+}

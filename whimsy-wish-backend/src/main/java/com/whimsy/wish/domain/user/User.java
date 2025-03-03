@@ -25,12 +25,12 @@ public class User extends BaseEntity implements UserDetails {
     @Column(nullable = false)
     private String password;
 
-    @Column(nullable = false)
+    @Column(name = "first_name", nullable = false)
     private String firstName;
 
-    @Column(nullable = false)
+    @Column(name = "last_name", nullable = false)
     private String lastName;
-
+    @Column(name = "phone_number")
     private String phoneNumber;
 
     @Enumerated(EnumType.STRING)
@@ -40,8 +40,11 @@ public class User extends BaseEntity implements UserDetails {
     private List<Address> addresses;
 
     private boolean enabled = true;
+    @Column(name = "account_non_expired")
     private boolean accountNonExpired = true;
+    @Column(name = "account_non_locked")
     private boolean accountNonLocked = true;
+    @Column(name = "credentials_non_expired")
     private boolean credentialsNonExpired = true;
 
     @Override
@@ -51,7 +54,7 @@ public class User extends BaseEntity implements UserDetails {
 
     @Override
     public String getUsername() {
-        // Using email as the username
+        // Critical: Always use email as username, never the ID
         return email;
     }
 
@@ -73,5 +76,10 @@ public class User extends BaseEntity implements UserDetails {
     @Override
     public boolean isEnabled() {
         return enabled;
+    }
+
+    // Add a helper method to avoid direct toString() on ID
+    public String getIdAsString() {
+        return getId() != null ? getId().toString() : null;
     }
 }

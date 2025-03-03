@@ -13,7 +13,7 @@ import lombok.*;
 @Builder
 public class Address extends BaseEntity {
 
-    @Column(nullable = false)
+    @Column(name = "street_address", nullable = false)
     private String streetAddress;
 
     @Column(nullable = false)
@@ -21,15 +21,14 @@ public class Address extends BaseEntity {
 
     @Column(nullable = false)
     private String state;
-
-    @Column(nullable = false)
+    @Column(name = "postal_code", nullable = false)
     private String postalCode;
 
     @Column(nullable = false)
     private String country;
-
+    @Column(name = "additional_info")
     private String additionalInfo;
-
+    @Column(name = "is_default")
     private boolean isDefault;
 
     @ManyToOne(fetch = FetchType.LAZY)

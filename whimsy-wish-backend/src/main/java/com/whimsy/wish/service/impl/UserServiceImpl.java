@@ -10,6 +10,7 @@ import com.whimsy.wish.exception.UserAlreadyExistsException;
 import com.whimsy.wish.repository.UserRepository;
 import com.whimsy.wish.service.UserService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -20,6 +21,7 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
@@ -28,6 +30,8 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public UserResponse createUser(UserCreateRequest request) {
+        log.debug("Creating new user with email: {}", request.getEmail());
+
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new UserAlreadyExistsException("Email already in use: " + request.getEmail());
         }
@@ -39,12 +43,20 @@ public class UserServiceImpl implements UserService {
                 .lastName(request.getLastName())
                 .phoneNumber(request.getPhoneNumber())
                 .role(Role.ROLE_USER) // Default role for new users
+                .enabled(true)
+                .accountNonExpired(true)
+                .accountNonLocked(true)  // Explicitly set to true
+                .credentialsNonExpired(true)
                 .build();
 
+        log.debug("User built, saving to database...");
         User savedUser = userRepository.save(user);
+        log.debug("User saved with ID: {}", savedUser.getId());
+
         return mapToUserResponse(savedUser);
     }
 
+    // Rest of the service implementation...
     @Override
     @Transactional(readOnly = true)
     public UserResponse getUserById(UUID id) {
@@ -117,4 +129,4 @@ public class UserServiceImpl implements UserService {
                 .updatedAt(user.getUpdatedAt())
                 .build();
     }
-} 
+}

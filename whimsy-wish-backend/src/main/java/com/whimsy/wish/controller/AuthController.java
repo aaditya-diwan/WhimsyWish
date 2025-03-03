@@ -22,16 +22,31 @@ public class AuthController {
 
     @PostMapping("/register")
     public ResponseEntity<AuthResponse> register(@Valid @RequestBody UserCreateRequest request) {
-        return ResponseEntity.ok(authService.register(request));
+        // Handle registration
+        try {
+            AuthResponse response = authService.register(request);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            // Log the exception for debugging
+            e.printStackTrace();
+            throw e;
+        }
     }
 
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody AuthRequest request) {
-        return ResponseEntity.ok(authService.authenticate(request));
+        try {
+            AuthResponse response = authService.authenticate(request);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            // Log the exception for debugging
+            e.printStackTrace();
+            throw e;
+        }
     }
 
     @PostMapping("/refresh-token")
     public ResponseEntity<AuthResponse> refreshToken(@Valid @RequestBody RefreshTokenRequest request) {
         return ResponseEntity.ok(authService.refreshToken(request));
     }
-} 
+}

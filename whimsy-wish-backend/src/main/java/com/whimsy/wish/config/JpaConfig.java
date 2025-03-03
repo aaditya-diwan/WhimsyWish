@@ -8,14 +8,13 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.util.Optional;
-import java.util.UUID;
 
 @Configuration
 @EnableJpaAuditing(auditorAwareRef = "auditorProvider")
 public class JpaConfig {
 
     @Bean
-    public AuditorAware<UUID> auditorProvider() {
+    public AuditorAware<String> auditorProvider() {
         return () -> {
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
@@ -23,9 +22,11 @@ public class JpaConfig {
                 return Optional.empty();
             }
 
-            // This assumes your UserDetails implementation has a getId() method that returns a UUID
-            // You'll need to adjust based on your actual authentication setup
-            return Optional.of(UUID.fromString("00000000-0000-0000-0000-000000000000")); // System user for now
+            // If authenticated, use the username (email) as the auditor
+            return Optional.of(authentication.getName());
+
+            // Alternatively, if you want to keep using a system user fallback:
+            // return Optional.of("system");
         };
     }
 }
