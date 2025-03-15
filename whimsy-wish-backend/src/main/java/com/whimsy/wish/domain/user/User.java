@@ -82,4 +82,29 @@ public class User extends BaseEntity implements UserDetails {
     public String getIdAsString() {
         return getId() != null ? getId().toString() : null;
     }
+
+    public boolean isAdmin() {
+        // If role is a string
+        return Role.ROLE_ADMIN.equals(this.role);
+        
+        // OR if role is an enum called Role
+        // return Role.ADMIN.equals(this.role);
+    }
+
+    @Override
+    public String toString() {
+        return "User{" +
+                "email='" + email + '\'' +
+                ", password='" + password + '\'' +
+                ", firstName='" + firstName + '\'' +
+                ", lastName='" + lastName + '\'' +
+                ", phoneNumber='" + phoneNumber + '\'' +
+                ", role=" + role +
+                ", addresses=" + addresses +
+                ", enabled=" + enabled +
+                ", accountNonExpired=" + accountNonExpired +
+                ", accountNonLocked=" + accountNonLocked +
+                ", credentialsNonExpired=" + credentialsNonExpired +
+                '}';
+    }
 }

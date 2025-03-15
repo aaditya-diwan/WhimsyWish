@@ -28,7 +28,7 @@ public class AddressServiceImpl implements AddressService {
     @Transactional
     public AddressResponse createAddress(UUID userId, AddressCreateRequest request) {
         User user = getUserById(userId);
-        
+        System.out.println(user.toString());
         // If this is the first address or set as default, ensure it's the only default
         if (request.isDefault()) {
             addressRepository.findByUserAndIsDefaultTrue(user)
@@ -47,6 +47,7 @@ public class AddressServiceImpl implements AddressService {
                 .additionalInfo(request.getAdditionalInfo())
                 .isDefault(request.isDefault())
                 .user(user)
+                .phoneNumber(user.getPhoneNumber())
                 .build();
         
         return mapToAddressResponse(addressRepository.save(address));
@@ -65,6 +66,7 @@ public class AddressServiceImpl implements AddressService {
     @Transactional(readOnly = true)
     public List<AddressResponse> getUserAddresses(UUID userId) {
         User user = getUserById(userId);
+        System.out.println(user.toString());
         return addressRepository.findByUser(user).stream()
                 .map(this::mapToAddressResponse)
                 .collect(Collectors.toList());

@@ -31,6 +31,9 @@ public class Address extends BaseEntity {
     @Column(name = "is_default")
     private boolean isDefault;
 
+    @Column(nullable = false, name = "phone_number")
+    private String phoneNumber;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;

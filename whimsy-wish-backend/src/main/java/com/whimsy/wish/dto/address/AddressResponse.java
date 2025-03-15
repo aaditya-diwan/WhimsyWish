@@ -14,11 +14,13 @@ import java.util.UUID;
 @AllArgsConstructor
 public class AddressResponse {
     private UUID id;
+    private String fullName;
     private String streetAddress;
     private String city;
     private String state;
     private String postalCode;
     private String country;
+    private String phoneNumber;
     private String additionalInfo;
     private boolean isDefault;
     private LocalDateTime createdAt;
